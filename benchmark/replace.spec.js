@@ -63,13 +63,17 @@ tap.beforeEach(async () => {
 
   testInput.replace = {
     regex,
-    replacement
+    replacement,
+    recursive: true,
+    silent: true
   }
 
   testInput.replaceAsync = {
     regex,
     replacement,
-    async: true
+    async: true,
+    recursive: true,
+    silent: true
   }
 
   testInput.replaceInFile = {
@@ -104,7 +108,7 @@ tap.afterEach((done) => {
 tap.test(`input as glob pattern [${iterationsNo} iterations x ${repetitionsNo / iterationsNo} repetitions]`, async ct => {
   const results = await multipleTests(ct, [
     {
-      fn: () => FRSreplace.async(testInput.FRSReplace),
+      fn: () => { FRSreplace.async(testInput.FRSReplace) }, // IMPORTANT: test doesn't wait for function to finish, because replace (async) doesn't support that kind of behaviour (https://github.com/harthur/replace/issues/25)
       before: () => (testInput.FRSReplace.input = `${dir}\\${tmpPrefixes.input}*`)
     },
     {
@@ -115,26 +119,24 @@ tap.test(`input as glob pattern [${iterationsNo} iterations x ${repetitionsNo / 
       fn: () => replaceInFile(testInput.replaceInFile),
       before: () => (testInput.replaceInFile.files = `${dir}\\${tmpPrefixes.input}*`)
     },
-    // {
-    //   fn: () => replace(testInput.replaceAsync), before: () => {
-    //     testInput.replaceAsync.paths = [dir.replace(/\\/g, '/')]
-    //     testInput.replaceAsync.include = `${tmpPrefixes.input}*`
-    //   }
-    // }, // COMMENTED OUT - waits for better FRS-replace async methods
-    void 0,
+    {
+      fn: () => replace(testInput.replaceAsync),
+      before: () => {
+        testInput.replaceAsync.paths = [dir.replace(/\\/g, '/')]
+      }
+    },
     {
       fn: () => replace(testInput.replace),
       before: () => {
         testInput.replace.paths = [dir.replace(/\\/g, '/')]
-        testInput.replace.include = `${tmpPrefixes.input}*`
       }
     },
     void 0
   ])
   const sortedResults = results.slice().sort(sortByNanoseconds)
 
-  ct.not(sortedResults[0].name.indexOf('FRS-replace'), -1, 'FRS-replace should be the fastest')
-  // results.map((result) => result.testCfg && ct.is(result.result, results[0].result, `${result.name} are results the same`))
+  ct.is((sortedResults[0].name.indexOf('FRS-replace') !== -1 || (sortedResults[1].name.indexOf('FRS-replace') !== -1 && sortedResults[1].avgPercentageDifference < 5)), true, 'FRS-replace should be the fastest or second, but at most with 5% difference to best')
+  ct.not(sortedResults[2].name.indexOf('FRS-replace sync'), -1, 'FRS-replace sync should be third (right after async replace)')
 
   outputPerfy(ct, results, sortedResults[0])
 
