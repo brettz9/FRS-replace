@@ -117,7 +117,7 @@ tap.test(`input as glob pattern [${iterationsNo} iterations x ${repetitionsNo / 
     },
     {
       fn: () => replaceInFile(testInput.replaceInFile),
-      before: () => (testInput.replaceInFile.files = `${dir}\\${tmpPrefixes.input}*`)
+      before: () => (testInput.replaceInFile.files = dir + require('path').sep + tmpPrefixes.input + '*')
     },
     {
       fn: () => replace(testInput.replaceAsync),

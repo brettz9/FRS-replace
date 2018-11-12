@@ -89,7 +89,7 @@ tap.test('check api', async t => {
           async f => {
             input = f
             return new Promise(
-              (resolve) => fs.appendFile(f.path, content, { encoding: defaults.inputReadOptions }, resolve)
+              resolve => fs.appendFile(f.path, content, { encoding: defaults.inputReadOptions }, resolve)
             )
           })
       await tmp.file({ prefix: tmpPrefixes.input, keep: true, dir })
@@ -97,7 +97,7 @@ tap.test('check api', async t => {
           async f => {
             input2 = f
             return new Promise(
-              (resolve) => fs.appendFile(f.path, content, { encoding: defaults.inputReadOptions }, resolve)
+              resolve => fs.appendFile(f.path, content, { encoding: defaults.inputReadOptions }, resolve)
             )
           })
     })
@@ -170,10 +170,10 @@ tap.test('check api', async t => {
     ct.end()
   })
 
-  await t.test('outputOptions as object', async ct => {
+  await t.test('outputWriteOptions as object', async ct => {
     testInput.content = content
     output = testInput.output = tmp.tmpNameSync({ prefix: tmpPrefixes.output, dir })
-    testInput.outputOptions = { encoding: defaults.outputWriteOptions }
+    testInput.outputWriteOptions = { encoding: defaults.outputWriteOptions }
 
     await checkSyncAsync(ct, 'is', [testInput, expectedOutput, 'replaced correctly'])
 

@@ -105,16 +105,11 @@ function writeError (msg) {
 
 function multiFileReaderBuilder (fs, inputReadOptions, setup) {
   let i = 0
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     setup((path, callback) => {
-      if (++i < 1) return
+      ++i
 
-      fs.readFile(path, inputReadOptions, (error, data) => {
-        if (error) {
-          i = -1
-          return reject(error)
-        }
-
+      fs.readFile(path, inputReadOptions, (e, data) => {
         callback(data)
 
         if (--i === 0) {
