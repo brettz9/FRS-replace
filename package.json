@@ -35,14 +35,13 @@
     "javascript"
   ],
   "scripts": {
-    "prerelease": "standard --fix && yarn test",
+    "prerelease": "standard --fix && yarn test && yarn test:benchmark",
     "release": "standard-version",
     "postrelease": "git push --follow-tags origin master && yarn publish",
-    "pretest": "standard",
-    "test": "yarn test:unit --100 --coverage-report=html && yarn test:benchmark",
-    "pretest:unit": "standard --fix",
-    "test:unit": "tap ./src/*.spec.js ./bin/*.spec.js -J",
-    "test:benchmark": "tap ./benchmark/*.spec.js --no-timeout"
+    "test": "yarn test:unit && tap --coverage-report=html",
+    "test:unit": "tap ./src/*.spec.js ./bin/*.spec.js -J --no-timeout",
+    "test:benchmark": "tap ./benchmark/*.spec.js --no-timeout",
+    "standard": "standard --fix"
   },
   "nyc": {
     "exclude": "**/*.spec.js",

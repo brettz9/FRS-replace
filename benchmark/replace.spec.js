@@ -38,8 +38,6 @@ const testedLibraries = [
 
 let dir, output, input
 
-const readmeContent = fs.readFileSync('./README.md').toString()
-
 let perfyResults = ''
 
 {
@@ -133,12 +131,12 @@ tap.test(`input as glob pattern [${iterationsNo} iterations x ${repetitionsNo / 
     },
     void 0
   ])
-  const sortedResults = results.slice().sort(sortByNanoseconds)
+
+  const result = outputPerfy(ct, results, results.slice().sort(sortByNumberVariable('fullNanoseconds'))[0])
+  const sortedResults = result.results.slice().sort(sortByNumberVariable('avgTime'))
 
   ct.is((sortedResults[0].name.indexOf('FRS-replace') !== -1 || (sortedResults[1].name.indexOf('FRS-replace') !== -1 && sortedResults[1].avgPercentageDifference < 5)), true, 'FRS-replace should be the fastest or second, but at most with 5% difference to best')
   ct.not(sortedResults[2].name.indexOf('FRS-replace sync'), -1, 'FRS-replace sync should be third (right after async replace)')
-
-  outputPerfy(ct, results, sortedResults[0])
 
   ct.end()
 })
@@ -165,9 +163,8 @@ tap.test(`input & replacement as strings [${iterationsNo} iterations x ${repetit
     { fn: () => replaceString(content, regex.source, replacement) }
   ])
 
-  const result = outputPerfy(ct, results, results.slice().sort(sortByNanoseconds)[0])
-
-  const sortedResults = result.results.slice().sort(sortByNanoseconds)
+  const result = outputPerfy(ct, results, results.slice().sort(sortByNumberVariable('fullNanoseconds'))[0])
+  const sortedResults = result.results.slice().sort(sortByNumberVariable('avgTime'))
 
   ct.is((sortedResults[0].name.indexOf('FRS-replace') !== -1 || (sortedResults[1].name.indexOf('FRS-replace') !== -1 && sortedResults[1].avgPercentageDifference < 10)), true, 'FRS-replace should be the fastest or second, but at most with 10% difference to best')
 
@@ -175,7 +172,9 @@ tap.test(`input & replacement as strings [${iterationsNo} iterations x ${repetit
 })
 
 tap.teardown(() => {
-  fs.writeFileSync('./README.md', readmeContent.replace(/(##\sBenchmarks\s\s)[\s\S]*?(?:$|(?:\s##\s))/, '$1' + perfyResults))
+  const readmeContent = fs.readFileSync('./README.md').toString()
+
+  fs.writeFileSync('./README.md', readmeContent.replace(/(##\sBenchmarks \(Node )(?:.*?)(\)\s\s)[\s\S]*?(?:$|(?:\s##\s))/, `$1${process.version}$2${perfyResults}`))
 })
 
 function outputPerfy (t, testResults, best) {
@@ -305,14 +304,19 @@ async function singleTest (name, test, n) {
   return result
 }
 
-function sortByNanoseconds (a, b) {
-  if (a.fullNanoseconds === void 0) {
-    return b.fullNanoseconds === void 0 ? 0 : 1
-  }
+function sortByNumberVariable (varName) {
+  return (a, b) => {
+    a = a[varName]
+    b = b[varName]
 
-  if (b.fullNanoseconds === void 0) {
-    return -1
-  }
+    if (a === void 0 || a === null) {
+      return b === void 0 || b === null ? 0 : 1
+    }
 
-  return a.fullNanoseconds - b.fullNanoseconds
+    if (b === void 0 || b === null) {
+      return -1
+    }
+
+    return a - b
+  }
 }

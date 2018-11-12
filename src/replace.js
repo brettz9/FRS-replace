@@ -63,9 +63,9 @@ async function replaceAsync ({
   const replaceFn = typeof regex === 'string' ? replaceString : replaceRegex
 
   if (content !== void 0) {
-    result = replaceFn(content, regex, replacement)
+    result = new Promise(resolve => resolve(replaceFn(content, regex, replacement)))
   } else if (input !== void 0) {
-    const fileStream = await require('fast-glob').stream(input, inputGlobOptions)
+    const fileStream = require('fast-glob').stream(input, inputGlobOptions)
     let filesFound = false
 
     result = ''
@@ -81,9 +81,7 @@ async function replaceAsync ({
       fileStream.once('error', writeError)
     })
 
-    await new Promise((resolve) => fileStream.once('end', () => {
-      return resolve(filesFound ? fileReaderPromise : void 0)
-    }))
+    await new Promise(resolve => fileStream.once('end', () => resolve(filesFound ? fileReaderPromise : void 0)))
   } else {
     writeError('at least one input source must be defined!')
   }
